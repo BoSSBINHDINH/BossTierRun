@@ -4,7 +4,7 @@ from discord import app_commands
 import datetime
 
 # --- CẤU HÌNH ---
-TOKEN = "MTUxNzA5OTc5Mzk5MjY1MDc2Mg.GeBJNr.9chv2u-W8Nb9Kp_OqeFjCvcv0dMB96dbZ4IvaY"
+TOKEN = ""
 ALLOWED_ROLES = [1517104790948151386, 1502217814994456676]
 
 ROLE_MAP = {
