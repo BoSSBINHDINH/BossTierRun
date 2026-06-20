@@ -4,7 +4,7 @@ from discord import app_commands
 import datetime
 
 # --- CẤU HÌNH ---
-TOKEN = ""
+TOKEN = "YOUR_TOKEN"
 ALLOWED_ROLES = [1517104790948151386, 1502217814994456676]
 
 ROLE_MAP = {
@@ -50,9 +50,9 @@ def has_permission(member): return any(role.id in ALLOWED_ROLES for role in memb
 def create_embed():
     embed = discord.Embed(title="🟢 Test Tier Queue Open", color=discord.Color.green())
     players_text = "\n".join(f"{i+1}. <@{uid}>" for i, uid in enumerate(queue_players)) if queue_players else "None"
-    embed.add_field(name=f"Players in Queue ({len(queue_players)}/20)", value=players_text, inline=False)
+    embed.add_field(name=f"👥 Players in Queue ({len(queue_players)}/20)", value=players_text, inline=False)
     embed.add_field(name="🎯 Player Testing", value=f"<@{current_testing}>" if current_testing else "None", inline=False)
-    embed.add_field(name="👨‍💻 Tester", value=f"<@{queue_owner}>" if queue_owner else "None", inline=False)
+    embed.add_field(name="👨‍💻 Active Testers", value=f"<@{queue_owner}>" if queue_owner else "None", inline=False)
     embed.set_footer(text="Sử dụng nút Join Queue để tham gia test tier.")
     return embed
 
@@ -132,7 +132,7 @@ async def on_ready():
 async def setup_menu(i: discord.Interaction):
     description_text = (
         "Chào mừng bạn! Vui lòng chọn Xác minh tài khoản hoặc vào Waitlists :\n"
-        "- **Verify**: là bạn sẽ nhập tên game của bạn vào và ấn enter\n"
+        "- **Verify**: là bạn sẽ nhập tên của bạn vào và ấn enter\n"
         "- **Enter Waitlists**: là bạn sẽ chọn mode bạn muốn vào để chờ queue"
     )
     embed = discord.Embed(title="📝 Evaluation Testing Waitlist", description=description_text, color=discord.Color.dark_gray())
@@ -143,7 +143,7 @@ async def setup_menu(i: discord.Interaction):
 async def open_queue(interaction: discord.Interaction):
     global queue_owner, queue_players, queue_message, closed_message
     if not has_permission(interaction.user): return await interaction.response.send_message("❌ No permission", ephemeral=True)
-    
+
     # Xóa bảng đóng cũ nếu có
     if closed_message:
         try: await closed_message.delete()
@@ -155,21 +155,45 @@ async def open_queue(interaction: discord.Interaction):
     await interaction.response.send_message(content="@here", embed=create_embed(), view=QueueView())
     queue_message = await interaction.original_response()
 
-@bot.tree.command(name="close-queue", description="Đóng queue")
+@bot.tree.command(name="close-queue", description="Đóng queue và thông báo kết thúc")
 async def close_queue(interaction: discord.Interaction):
-    global queue_owner, queue_players, current_testing, queue_message, closed_message
-    if not has_permission(interaction.user): return await interaction.response.send_message("❌ Không có quyền!", ephemeral=True)
-    
-    # Xóa bảng mở cũ nếu có
-    if queue_message:
-        try: await queue_message.delete()
-        except: pass
-        queue_message = None
-    
-    ended_embed = discord.Embed(title="🚫 No Testers Online 🚫", description="No testers for neth currently\nYou will be pinged when a tester is ready.", color=discord.Color.red())
-    ended_embed.add_field(name="Session Ended", value=f"<t:{int(discord.utils.utcnow().timestamp())}:f>", inline=False)
+    global queue_owner, queue_players, current_testing, queue_message
+
+    if not has_permission(interaction.user):
+        return await interaction.response.send_message("❌ Bạn không có quyền!", ephemeral=True)
+
+    # Tạo Embed thông báo kết thúc
+    ended_embed = discord.Embed(
+        title="🚫 No Testers Online 🚫",
+        description="No testers for neth currently\nYou will be pinged when a tester is ready.",
+        color=discord.Color.red()
+    )
+    ended_embed.add_field(
+        name="Session Ended",
+        value=f"<t:{int(discord.utils.utcnow().timestamp())}:f>", # Hiển thị thời gian thực
+        inline=False
+    )
     ended_embed.set_footer(text="Ended just now")
-    
+
+    # Xóa tin nhắn queue cũ nếu tồn tại
+    if queue_message:
+        try:
+            await queue_message.delete()
+        except:
+            pass
+
+    # Gửi thông báo kết thúc mới
+    await interaction.channel.send(embed=ended_embed)
+
+    # Reset toàn bộ trạng thái
+    queue_owner = None
+    queue_players = []
+    current_testing = None
+    queue_message = None
+
+    await interaction.response.send_message("✅ Đã đóng queue thành công.", ephemeral=True)
+
+
     queue_owner = None; queue_players = []; current_testing = None
     await interaction.response.send_message("✅ Đã đóng queue.", ephemeral=True)
 
@@ -193,7 +217,8 @@ async def results(interaction: discord.Interaction, user: discord.Member, tier_b
     if not has_permission(interaction.user): return await interaction.response.send_message("❌ No permission", ephemeral=True)
     await interaction.response.defer()
     embed = discord.Embed(title=f"{user.display_name}'s Test Result", color=discord.Color.dark_gray())
-    embed.set_thumbnail(url=f"https://mc-heads.net/avatar/{username}")
+    thumbnail_url = f"https://render.crafty.gg/3d/bust/{username}"
+    embed.set_thumbnail(url=thumbnail_url)
     embed.add_field(name="Tester", value=f"{interaction.user.mention}", inline=False)
     embed.add_field(name="Username", value=username, inline=False)
     embed.add_field(name="Mode", value=f"{MODE_ICONS.get(mode, '')} {mode}", inline=False)
