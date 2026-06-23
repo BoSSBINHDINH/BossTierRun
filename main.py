@@ -8,6 +8,7 @@ TOKEN = "YOUR_TOKEN"
 ALLOWED_ROLES = [1517104790948151386, 1502217814994456676]
 
 ROLE_MAP = {
+    "None":1518810587931476091,
     "lt5": 1502218507591483442, "ht5": 1502218544887365673,
     "lt4": 1502218563149234216, "ht4": 1502218593704607884,
     "lt3": 1502218609840361563, "ht3": 1502218664814972938,
@@ -32,7 +33,8 @@ MODE_WAITLIST_CONFIG = {
     "NetheritePot": {"role": 1502219524072542389, "chan": "#nethop-waitlist"},
     "Axe": {"role": 1502219631623143524, "chan": "#axe-waitlist"},
     "Mace": {"role": 1502219739555172484, "chan": "#mace-waitlist"},
-    "UHC": {"role": 1502225864346177596, "chan": "#uhc-waitlist"}
+    "UHC": {"role": 1502225864346177596, "chan": "#uhc-waitlist"},
+    "Diapot": {"role": 1518805259420438588, "chan": "#diapot-waitlist"}
 }
 
 intents = discord.Intents.default()
